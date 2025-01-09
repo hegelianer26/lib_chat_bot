@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки бота</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li class="navbar-item"><a href="/config" class="navbar-link">Настройки чата</a></li>
+            <li class="navbar-item"><a href="/dialogs" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="/statistics" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="/users" class="navbar-link">Пользователи</a></li>
+        </ul>
+    </nav>
+    
+    <div class="config-section">
+        <h1>Настройки бота</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    
+        <form method="POST">
+            <div class="form-group">
+                <label for="vk_token">VK Token</label>
+                <div class="token-display">
+                    {% if config.vk_token %}
+                        <span class="masked-value">•••••{{ config.vk_token[-7:] }}</span>
+                    {% endif %}
+                </div>
+                <input type="password" id="vk_token" name="vk_token" 
+                       placeholder="{% if config.vk_token %}Оставьте пустым, чтобы не менять{% else %}Введите токен{% endif %}">
+                <div class="help-text">Токен группы VK для работы бота</div>
+            </div>
+    
+            <div class="form-group">
+                <label for="database_url">База данных</label>
+                <div class="db-display">
+                    {% if config.database_url %}
+                        <span class="masked-value">•••••{{ config.database_url[-7:] }}</span>
+                    {% endif %}
+                </div>
+                <input type="password" id="database_url" name="database_url" 
+                       placeholder="{% if config.database_url %}Оставьте пустым, чтобы не менять{% else %}Введите URL базы данных{% endif %}">
+                <div class="help-text">URL подключения к базе данных</div>
+            </div>
+    
+            <button type="submit" class="button">Сохранить настройки</button>
+        </form>
+    </div>
+</body>
+</html>

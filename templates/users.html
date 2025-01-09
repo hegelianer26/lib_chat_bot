@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользователи бота</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li class="navbar-item"><a href="/config" class="navbar-link">Настройки чата</a></li>
+            <li class="navbar-item"><a href="/dialogs" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="/statistics" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="/users" class="navbar-link">Пользователи</a></li>
+        </ul>
+    </nav>
+
+    <div class="form-section">
+        <h1>Пользователи бота</h1>
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Пользователь</th>
+                    <th>Запросов</th>
+                    <th>Первое обращение</th>
+                    <th>Последнее обращение</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_id, requests, vk_user, first_seen, last_seen in users %}
+                <tr>
+                    <td class="user-name">
+                        {% if vk_user %}
+                            <img src="{{ vk_user.photo_50 }}" class="user-avatar" alt="Avatar">
+                            <a href="https://vk.com/id{{ user_id }}" target="_blank">
+                                {{ vk_user.first_name }} {{ vk_user.last_name }}
+                            </a>
+                        {% else %}
+                            ID: {{ user_id }}
+                        {% endif %}
+                    </td>
+                    <td>{{ requests }}</td>
+                    <td>{{ first_seen }}</td>
+                    <td>{{ last_seen }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

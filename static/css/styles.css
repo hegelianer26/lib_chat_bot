@@ -1,0 +1,650 @@
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f5f5f5;
+}
+h1, h2 {
+    color: #3c4043;
+}
+
+/* Стили для форм */
+.form-section {
+    background: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+.inline-form {
+    display: inline-block;
+    margin: 0 0.5rem 0.5rem 0;
+}
+label {
+    margin-right: 0.5rem;
+    font-weight: 600;
+}
+input[type="text"],
+select,
+textarea {
+    margin: 0.3rem 0;
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+    width: 180px;
+}
+button {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    background: #1976d2;
+    font-size: 0.85rem;
+    margin-left: 0.4rem;
+}
+button:hover {
+    background: #1565c0;
+}
+.btn-delete {
+    background: #dc3545;
+    margin-left: 0.5rem;
+}
+.btn-delete:hover {
+    background: #c82333;
+}
+.item-block {
+    background: #fafafa;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    margin-bottom: 0.75rem;
+}
+.toggle-btn {
+    color: #007BFF;
+    cursor: pointer;
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+.subcategory {
+    margin-left: 1.5rem;
+}
+.hidden {
+    display: none;
+}
+.search-input {
+    margin-right: 0.4rem;
+}
+.search-button {
+    background-color: #ff9800;
+}
+ul.category-tree {
+    list-style-type: none;
+    padding-left: 0;
+}
+li {
+    margin-bottom: 0.6rem;
+}
+.category-name {
+    font-weight: 550;
+    margin-left: 0.25rem;
+}
+.answers-block {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+}
+.edit-field {
+    width: 130px;
+}
+
+/* Стили для работы с изображениями */
+.image-container {
+    margin: 10px 0;
+    position: relative;
+}
+.answer-thumbnail {
+    max-width: 150px;
+    max-height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.answer-thumbnail:hover {
+    transform: scale(1.05);
+}
+.answer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.answer-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.image-input {
+    max-width: 200px;
+}
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    z-index: 1000;
+}
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Стили для grid-карточек */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.dashboard-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: #3c4043;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+.dashboard-card i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #1976d2;
+}
+.dashboard-card h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #3c4043;
+}
+.dashboard-card p {
+    margin: 1rem 0 0;
+    color: #5f6368;
+    font-size: 0.9rem;
+}
+.icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    fill: #1976d2;
+}
+
+/* Стили для таблиц */
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+.users-table th,
+.users-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+.users-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+.user-name {
+    display: flex;
+    align-items: center;
+}
+.stats-badge {
+    background: #e3f2fd;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: #1976d2;
+}
+
+/* Стили для статистики */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.stat-card {
+    background: #fafafa;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #1976d2;
+    margin: 0.5rem 0;
+}
+.stat-label {
+    color: #666;
+    font-size: 0.9rem;
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 1rem 0;
+}
+.period-selector {
+    margin-bottom: 1rem;
+}
+.period-selector button {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    background: #1976d2;
+    font-size: 0.85rem;
+    margin-right: 0.5rem;
+}
+.period-selector button:hover {
+    background: #1565c0;
+}
+.period-selector button.active {
+    background: #ff9800;
+}
+.queries-list {
+    list-style: none;
+    padding: 0;
+}
+.query-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+.query-text {
+    color: #333;
+}
+.query-count {
+    color: #1976d2;
+    font-weight: bold;
+}
+.chart-wrapper {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+/* Стили для конфигурации */
+.config-section {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 2rem auto;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.help-text {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+.button {
+    background: #1976d2;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.button:hover {
+    background: #1565c0;
+}
+.flash {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+.flash.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+.flash.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+.database-options {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+.database-option {
+    margin-bottom: 0.5rem;
+}
+.masked-value {
+    font-family: monospace;
+    background: #f5f5f5;
+    padding: 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+input[type="password"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+
+css
+CopyInsert
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f5f5f5;
+}
+
+h1, h2 {
+    color: #3c4043;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #3c4043;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+button {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    background: #1976d2;
+    font-size: 0.85rem;
+}
+
+button:hover {
+    background: #1565c0;
+}
+
+.flash {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.flash.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.flash.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.database-options {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.database-option {
+    margin-bottom: 0.5rem;
+}
+
+.masked-value {
+    font-family: monospace;
+    background: #f5f5f5;
+    padding: 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+/* Стили для конфигураций */
+.config-section {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 2rem auto;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+/* Стили для дашборда */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: #3c4043;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.dashboard-card i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #1976d2;
+}
+
+.dashboard-card h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #3c4043;
+}
+
+.dashboard-card p {
+    margin: 1rem 0 0;
+    color: #5f6368;
+    font-size: 0.9rem;
+}
+
+/* Иконки для карточек */
+.icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    fill: #1976d2;
+}
+
+/* Стили для статистики */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.period-selector button {
+    padding: 0.4rem 1rem;
+    margin-right: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    background: #1976d2;
+    font-size: 0.85rem;
+}
+
+.period-selector button:hover {
+    background: #1565c0;
+}
+
+.period-selector button.active {
+    background: #ff9800;
+}
+
+.queries-list {
+    list-style: none;
+    padding: 0;
+}
+
+.query-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.query-text {
+    color: #333;
+}
+
+.query-count {
+    color: #1976d2;
+    font-weight: bold;
+}
+
+.chart-wrapper {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+/* Стили для навигации */
+.navbar {
+    background: #2e6086;
+    padding: 0;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 колонки */
+    gap: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.navbar-item {
+    margin: 0;
+}
+
+.navbar-link {
+    display: block;
+    text-align: center;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 1rem;
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+.navbar-link:hover {
+    background: #1e4560; /* Slightly darker on hover */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    text-decoration: none;
+}
+.toggle-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.toggle-buttons button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+.toggle-buttons button:hover {
+    background-color: #0056b3;
+}
+.top-level {
+    font-weight: bold;
+    color: blue; /* Пример изменения цвета текста */
+}

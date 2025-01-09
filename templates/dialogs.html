@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <script src="https://cdn.tiny.cloud/1/v48jrck1j9l25ljqjd19zuxjy9g3fletyxhjnhzhjlj2ltz2/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <title>Диалоги</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Select2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <!-- jQuery (необходим для Select2) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+
+</head>
+<body>
+    
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li class="navbar-item"><a href="/config" class="navbar-link">Настройки чата</a></li>
+            <li class="navbar-item"><a href="/dialogs" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="/statistics" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="/users" class="navbar-link">Пользователи</a></li>
+        </ul>
+    </nav>
+    
+    {% macro render_category_tree(categories, parent_id=None, prefix="", level=0) %}
+    {% for category in categories %}
+        {% if category.parent_id == parent_id %}
+            {% if level == 0 %}
+                <option value="{{ category.id }}">🗂️ {{ category.name }}</option>
+            {% else %}
+                <option value="{{ category.id }}">{{ prefix }} {{ category.name }}</option>
+            {% endif %}
+            {% if category.children %}
+                {{ render_category_tree(categories, category.id, prefix + "----", level + 1) }}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
+    <h1>Управление диалогами</h1>
+
+    <!-- Форма для добавления категории -->
+    <div class="form-section">
+        <h2>Добавить категорию</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="add_category">
+            <label>Название категории:
+                <input type="text" name="category_name" placeholder="Категория" required>
+            </label>
+            <label>Родительская категория:
+                <select name="parent_id" class="category-select">
+                    <option value="">(без родителя)</option>
+                    {{ render_category_tree(categories) }}
+                </select>
+                
+            </label>
+            <button type="submit">Добавить</button>
+        </form>
+    </div>
+
+    <!-- Форма для добавления ответа -->
+    <div class="form-section">
+        <h2>Добавить ответ</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="add_answer">
+            <label>Текст ответа:
+                <textarea name="answer_text" cols="40" rows="3" placeholder="Текст ответа" required></textarea>
+            </label>
+            <label>Категория:
+                <select name="category_id">
+                    {% for c in categories %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Фото (необязательно):
+                <input type="file" name="answer_image" accept="image/*">
+            </label>
+            <button type="submit">Добавить ответ</button>
+        </form>
+    </div>
+
+    {% macro render_category_tree(category) %}
+    <li>
+        {% set has_children = category.children|length > 0 %}
+        {% set has_answers = category.answers|length > 0 %}
+
+        {% if has_children or has_answers %}
+            <span class="toggle-btn" onclick="toggleSubtree(this)">[+]</span>
+        {% else %}
+            <span class="toggle-btn"></span>
+        {% endif %}
+
+        <span class="category-name">#{{ category.id }} {{ category.name }}</span>
+
+        <form method="POST" class="inline-form">
+            <input type="hidden" name="action" value="delete_category">
+            <input type="hidden" name="cat_id" value="{{ category.id }}">
+            <button type="submit" class="btn-delete">Удалить</button>
+        </form>
+
+        <form method="POST" class="inline-form">
+            <input type="hidden" name="action" value="edit_category">
+            <input type="hidden" name="cat_id" value="{{ category.id }}">
+            <input type="text" name="new_name" class="edit-field" placeholder="Новое имя">
+            <button type="submit">Изм.</button>
+        </form>
+
+        {% if has_children or has_answers %}
+            <ul class="subcategory hidden">
+                {% if has_answers %}
+                    <div class="answers-block">
+                        {% for ans in category.answers %}
+                        <div class="answer-content">
+                            <strong>Ответ #{{ ans.id }}</strong>
+                            <div id="view-answer-{{ ans.id }}">
+                                <p>{{ ans.text }}</p>
+                                <form method="POST" class="inline-form">
+                                    <input type="hidden" name="action" value="delete_answer">
+                                    <input type="hidden" name="ans_id" value="{{ ans.id }}">
+                                    <button type="submit" class="btn-delete-answer">Удалить</button>
+                                </form>
+                                <button onclick="showEditForm({{ ans.id }})">Редактировать</button>
+                            </div>
+                            <div id="edit-form-{{ ans.id }}" style="display: none;">
+                                <form method="POST" class="edit-answer-form" enctype="multipart/form-data">
+                                    <input type="hidden" name="action" value="edit_answer">
+                                    <input type="hidden" name="ans_id" value="{{ ans.id }}">
+                                    <textarea id="edit-answer-{{ ans.id }}" name="new_text">{{ ans.text }}</textarea>
+                                    <input type="file" name="new_image" class="image-input">
+                                    <button type="submit">Сохранить</button>
+                                    <button type="button" onclick="hideEditForm({{ ans.id }})">Отмена</button>
+                                </form>
+                            </div>
+                            
+                            {% if ans.image_path %}
+                            <div class="image-container">
+                                <img src="{{ url_for('static', filename=ans.image_path.replace('static/', '')) }}" 
+                                     class="answer-thumbnail" 
+                                     onclick="showFullImage(this.src)"
+                                     alt="Изображение ответа">
+                                <form method="POST" class="inline-form">
+                                    <input type="hidden" name="action" value="delete_image">
+                                    <input type="hidden" name="ans_id" value="{{ ans.id }}">
+                                    <button type="submit" class="btn-delete-photo">Удалить фото</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% for child_cat in category.children %}
+                    {{ render_category_tree(child_cat) }}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </li>
+    {% endmacro %}
+
+    <div class="form-section">
+        <h2>Структура категорий</h2>
+        <div class="toggle-buttons">
+            <button onclick="collapseAll()">Свернуть все</button>
+            <button onclick="expandAll()">Развернуть все</button>
+        </div>
+        <ul class="category-tree">
+            {% for root_cat in root_categories %}
+                {{ render_category_tree(root_cat) }}
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Модальное окно для просмотра изображений -->
+    <div id="imageModal" class="modal">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    
+</body>
+</html>

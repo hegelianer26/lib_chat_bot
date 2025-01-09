@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Статистика бота</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+
+</head>
+<body>
+
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li class="navbar-item"><a href="/config" class="navbar-link">Настройки чата</a></li>
+            <li class="navbar-item"><a href="/dialogs" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="/statistics" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="/users" class="navbar-link">Пользователи</a></li>
+        </ul>
+    </nav>
+
+    <h1>Статистика чат-бота</h1>
+
+    <div class="form-section">
+        <div class="period-selector">
+            <button onclick="updatePeriod(7)" class="active">7 дней</button>
+            <button onclick="updatePeriod(30)">30 дней</button>
+            <button onclick="updatePeriod(90)">90 дней</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">-</div>
+                <div class="stat-label">Активных пользователей</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalQueries">-</div>
+                <div class="stat-label">Всего запросов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgQueriesPerDay">-</div>
+                <div class="stat-label">Среднее кол-во запросов в день</div>
+            </div>
+            <div class="stat-card"> 
+                <div class="stat-number" id="totalFailedQueries">-</div>
+                <div class="stat-label">Всего невыполненных запросов</div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h2>Ежедневная активность</h2>
+        <div class="chart-wrapper">
+            <canvas id="dailyChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Добавляем новую секцию после "Ежедневная активность" -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h2>Частые запросы</h2>
+            <ul class="queries-list" id="queriesList"></ul>
+        </div>
+    
+        <div class="stat-card">
+            <h2>Невыполненные запросы</h2>
+
+                <ul class="queries-list" id="failedQueriesList"></ul>
+        </div>
+    </div>
+
+    <script>
+        let currentPeriod = 7;
+        let charts = {};
+
+    async function loadStatistics() {
+        const [overview, daily, queries, failed] = await Promise.all([
+            fetch(`/api/statistics/overview?days=${currentPeriod}`).then(r => r.json()),
+            fetch(`/api/statistics/daily?days=${currentPeriod}`).then(r => r.json()),
+            fetch('/api/statistics/queries').then(r => r.json()),
+            fetch('/api/statistics/failed-queries').then(r => r.json())
+        ]);
+
+
+            // Update summary stats
+            document.getElementById('totalUsers').textContent = overview.user_activity.length;
+            document.getElementById('totalQueries').textContent = daily.daily_activity.reduce((sum, day) => sum + day.count, 0);
+            document.getElementById('avgQueriesPerDay').textContent = Math.round(
+                daily.daily_activity.reduce((sum, day) => sum + day.count, 0) / daily.daily_activity.length
+            );
+
+            // Update daily activity chart
+            if (charts.daily) charts.daily.destroy();
+            charts.daily = new Chart(document.getElementById('dailyChart'), {
+                type: 'line',
+                data: {
+                    labels: daily.daily_activity.map(d => new Date(d.date).toLocaleDateString('ru-RU')),
+                    datasets: [
+                        {
+                            label: 'Количество запросов',
+                            data: daily.daily_activity.map(d => d.count),
+                            borderColor: '#1976d2',
+                            backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Количество пользователей',
+                            data: daily.daily_activity.map(d => d.users_count), // Новое поле
+                            borderColor: '#ff9800',
+                            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Количество запросов'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Количество пользователей'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update categories chart
+
+
+            // Update queries list
+            const queriesList = document.getElementById('queriesList');
+            queriesList.innerHTML = '';
+            queries.popular_queries.forEach(q => {
+                const li = document.createElement('li');
+                li.className = 'query-item';
+                li.innerHTML = `
+                    <span class="query-text">${q.query}</span>
+                    <span class="query-count">${q.count}</span>
+                `;
+                queriesList.appendChild(li);
+            });
+
+            const totalFailed = failed.queries.reduce((sum, q) => sum + q.count, 0);
+            document.getElementById('totalFailedQueries').textContent = totalFailed;
+
+            const failedList = document.getElementById('failedQueriesList');
+            failedList.innerHTML = '';
+            if (failed.queries.length > 0) {
+                failed.queries.forEach(q => {
+                    const li = document.createElement('li');
+                    li.className = 'query-item';
+                    li.innerHTML = `
+                        <span class="query-text">${q.query}</span>
+                        <span class="query-count">${q.count}</span>
+                    `;
+                    failedList.appendChild(li);
+                });
+            } else {
+                failedList.innerHTML = '<li class="query-item">Нет невыполненных запросов</li>';
+            }
+
+        }
+
+        function updatePeriod(days) {
+            currentPeriod = days;
+            document.querySelectorAll('.period-selector button').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(days.toString()));
+            });
+            loadStatistics();
+        }
+
+        loadStatistics();
+    </script>
+</body>
+</html>
