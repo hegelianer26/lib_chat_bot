@@ -18,6 +18,15 @@ class Category(Base):
         lazy='joined'
     )
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'parent_id': self.parent_id,
+            'children': [child.to_dict() for child in self.children],
+            'answers': [answer.to_dict() for answer in self.answers]
+        }
+    
 
 class Answer(Base): 
     __tablename__ = 'answer'
@@ -28,7 +37,15 @@ class Answer(Base):
 
     category = relationship('Category', backref='answers')
 
-
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'text': self.text,
+            'category_id': self.category_id,
+            'image_path': self.image_path
+        }
+    
+    
 class BotStatistics(Base):
     __tablename__ = 'bot_statistics'
     

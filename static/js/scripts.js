@@ -111,3 +111,45 @@ document.querySelectorAll('.edit-answer-form').forEach(form => {
     $('.category-select').select2('destroy').select2();
 
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.querySelectorAll('.alert');
+    flashMessages.forEach(function(message) {
+      // Анимация появления
+      message.style.opacity = '0';
+      message.style.transform = 'translateY(-20px)';
+      setTimeout(() => {
+        message.style.opacity = '1';
+        message.style.transform = 'translateY(0)';
+      }, 100);
+  
+      // Автоматически скрывать сообщение через 5 секунд
+      setTimeout(function() {
+        message.style.opacity = '0';
+        message.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+          message.remove();
+        }, 300);
+      }, 5000);
+  
+      // Добавляем эффект при наведении
+      message.addEventListener('mouseover', function() {
+        this.style.transform = 'scale(1.05)';
+      });
+  
+      message.addEventListener('mouseout', function() {
+        this.style.transform = 'scale(1)';
+      });
+  
+      // Обработчик для кнопки закрытия
+      const closeButton = message.querySelector('.alert-close');
+      closeButton.addEventListener('click', function() {
+        message.style.opacity = '0';
+        message.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+          message.remove();
+        }, 300);
+      });
+    });
+  });

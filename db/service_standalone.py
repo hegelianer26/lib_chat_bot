@@ -25,6 +25,10 @@ def create_category(name, parent_id=None):
         session.add(cat)
         session.commit()
 
+def get_category_by_id(cat_id):
+    with SessionLocal() as session:
+        return session.query(Category).get(cat_id)
+
 def create_answer(category_id, text):
     with SessionLocal() as session:
         ans = Answer(category_id=category_id, text=text)

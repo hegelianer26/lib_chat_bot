@@ -8,6 +8,8 @@ import json
 from flask import flash
 from dotenv import load_dotenv, set_key
 from bs4 import BeautifulSoup
+import uuid
+
 
 load_dotenv() 
 
@@ -42,92 +44,85 @@ def index():
         'index.html',
     )
 
-@app.route('/dialogs', methods=['GET', 'POST'])
+
+
+@app.route('/dialogs/add_answer', methods=['POST'])
+def add_answer():
+    category_id = request.form.get('category_id')
+    answer_text = request.form.get('answer_text')
+    
+    # Clean HTML from TinyMCE
+    cleaned_text = clean_html_content(answer_text)
+    
+    uploaded_file = request.files.get('answer_image')
+    saved_path = None
+
+    if uploaded_file and uploaded_file.filename:
+        original_filename = secure_filename(uploaded_file.filename)
+        unique_filename = generate_unique_filename(original_filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        try:
+            original_filename = secure_filename(uploaded_file.filename)
+            unique_filename = generate_unique_filename(original_filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            uploaded_file.save(file_path)
+            saved_path = os.path.join('uploads', unique_filename)
+            flash('Изображение успешно загружено', 'success')
+        except Exception as e:
+            print(f"Error saving file: {str(e)}")
+            flash(f"Ошибка при сохранении файла: {str(e)}", "error")
+            return redirect(url_for('dialogs'))
+
+    if category_id and cleaned_text:
+        db_service.create_answer(
+            category_id=int(category_id),
+            text=cleaned_text,
+            image_path=saved_path
+        )
+        flash('Ответ успешно добавлен', 'success')
+
+    return redirect(url_for('dialogs'))
+
+@app.route('/dialogs/add_category', methods=['POST'])
+def add_category():
+    category_name = request.form.get('category_name')
+    parent_id = request.form.get('parent_id')
+    if category_name:
+        db_service.create_category(
+            name=category_name,
+            parent_id=int(parent_id) if parent_id else None
+        )
+        flash('Категория успешно добавлена', 'success')
+    else:
+        flash('Ошибка: Название категории не может быть пустым', 'error')
+    return redirect(url_for('dialogs'))
+
+
+@app.route('/dialogs/delete_category', methods=['POST'])
+def delete_category():
+    cat_id = request.form.get('cat_id')
+    if cat_id:
+        category = db_service.get_category_by_id(cat_id)
+        if category:
+            db_service.delete_category(cat_id)
+            flash(f'Категория "{category.name}" успешно удалена', 'success')
+        else:
+            flash('Ошибка: Категория не найдена', 'error')
+    else:
+        flash('Ошибка: ID категории не указан', 'error')
+
+    return redirect(url_for('dialogs'))
+
+@app.route('/dialogs/delete_answer', methods=['POST'])
+def delete_answer():
+    ans_id = request.form.get('ans_id')
+    if ans_id:
+        db_service.delete_answer(int(ans_id))
+        flash('Ответ успешно удален', 'success')
+    return redirect(url_for('dialogs'))
+
+@app.route('/dialogs', methods=['GET'])
 def dialogs():
-    if request.method == 'POST':
-        action = request.form.get('action')
-
-        if action == 'add_answer':
-            category_id = request.form.get('category_id')
-            answer_text = request.form.get('answer_text')
-            
-            # Clean HTML from TinyMCE
-            cleaned_text = clean_html_content(answer_text)
-            
-            uploaded_file = request.files.get('answer_image')
-            saved_path = None
-
-            if uploaded_file and uploaded_file.filename:
-                filename = secure_filename(uploaded_file.filename)
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                uploaded_file.save(file_path)
-                saved_path = os.path.join('uploads', filename)
-
-            if category_id and cleaned_text:
-                db_service.create_answer(
-                    category_id=int(category_id),
-                    text=cleaned_text,
-                    image_path=saved_path
-                )
-
-        elif action == 'add_category':
-            category_name = request.form.get('category_name')
-            parent_id = request.form.get('parent_id')
-            if category_name:
-                db_service.create_category(
-                    name=category_name,
-                    parent_id=int(parent_id) if parent_id else None
-                )
-                flash('Категория успешно добавлена', 'success')
-            else:
-                flash('Ошибка: Название категории не может быть пустым', 'error')
-
-        elif action == 'delete_category':
-            cat_id = request.form.get('cat_id')
-            if cat_id:
-                db_service.delete_category(int(cat_id))
-
-        elif action == 'delete_answer':
-            ans_id = request.form.get('ans_id')
-            if ans_id:
-                db_service.delete_answer(int(ans_id))
-
-        elif action == 'delete_image':
-            ans_id = request.form.get('ans_id')
-            if ans_id:
-                remove_answer_image(int(ans_id))
-
-        elif action == 'edit_category':
-            cat_id = request.form.get('cat_id')
-            new_name = request.form.get('new_name')
-            if cat_id and new_name:
-                db_service.update_category_name(int(cat_id), new_name)
-
-        elif action == 'edit_answer':
-            ans_id = request.form.get('ans_id')
-            new_text = request.form.get('new_text')
-            
-            # Clean HTML from TinyMCE
-            cleaned_text = clean_html_content(new_text)
-            
-            uploaded_file = request.files.get('new_image')
-            saved_path = None
-
-            if uploaded_file and uploaded_file.filename:
-                filename = secure_filename(uploaded_file.filename)
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                uploaded_file.save(file_path)
-                saved_path = os.path.join('uploads', filename)
-
-            if ans_id and cleaned_text:
-                db_service.update_answer(
-                    answer_id=int(ans_id),
-                    new_text=cleaned_text,
-                    new_image_path=saved_path
-                )
-
-        return redirect(url_for('dialogs'))
-
     categories = db_service.get_all_categories()
     answers = db_service.get_all_answers()
     root_categories = [c for c in categories if c.parent_id is None]
@@ -138,6 +133,63 @@ def dialogs():
         answers=answers,
         root_categories=root_categories,
     )
+
+
+@app.route('/dialogs/edit_answer', methods=['POST'])
+def edit_answer():
+    ans_id = request.form.get('ans_id')
+    new_text = request.form.get('new_text')
+    
+    # Clean HTML from TinyMCE
+    cleaned_text = clean_html_content(new_text)
+    
+    uploaded_file = request.files.get('new_image')
+    saved_path = None
+
+    if uploaded_file and uploaded_file.filename:
+        original_filename = secure_filename(uploaded_file.filename)
+        unique_filename = generate_unique_filename(original_filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        try:
+            original_filename = secure_filename(uploaded_file.filename)
+            unique_filename = generate_unique_filename(original_filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            uploaded_file.save(file_path)
+            saved_path = os.path.join('uploads', unique_filename)
+            flash('Новое изображение успешно загружено', 'success')
+        except Exception as e:
+            flash(f'Ошибка при сохранении файла: {str(e)}', 'error')
+            return redirect(url_for('dialogs'))
+
+    if ans_id and cleaned_text:
+        db_service.update_answer(
+            answer_id=int(ans_id),
+            new_text=cleaned_text,
+            new_image_path=saved_path
+        )
+        flash('Ответ успешно обновлен', 'success')
+
+    return redirect(url_for('dialogs'))
+
+@app.route('/dialogs/delete_image', methods=['POST'])
+def delete_image():
+    ans_id = request.form.get('ans_id')
+    if ans_id:
+        db_service.delete_answer(int(ans_id))
+        flash('Ответ успешно удален', 'success')
+    else:
+        flash('Ошибка: ID ответа не указан', 'error')
+
+@app.route('/dialogs/edit_category', methods=['POST'])
+def edit_category():
+    cat_id = request.form.get('cat_id')
+    new_name = request.form.get('new_name')
+    if cat_id and new_name:
+        db_service.update_category_name(int(cat_id), new_name)
+        flash('Категория успешно обновлена', 'success')
+    return redirect(url_for('dialogs'))
+
+
 
 
 
@@ -296,7 +348,11 @@ def remove_answer_image(answer_id):
 
 
 
-
+def generate_unique_filename(filename):
+    """Generate a unique filename while keeping the original extension."""
+    unique_filename = str(uuid.uuid4())
+    _, file_extension = os.path.splitext(filename)
+    return f"{unique_filename}{file_extension}"
 
 
 

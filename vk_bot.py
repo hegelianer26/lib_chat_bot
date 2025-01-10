@@ -14,6 +14,9 @@ token = os.getenv("VK_TOKEN")
 
 bot = Bot(token=token)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
+
 def build_categories_keyboard(parent_id=None, current_path=None):
     try:
         keyboard = Keyboard(one_time=True, inline=False)
