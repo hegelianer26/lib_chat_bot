@@ -7,15 +7,20 @@ from dotenv import load_dotenv
 import os
 from db import service_standalone as db_service
 from services.vufind_service import search_catalog, format_catalog_record
+import logging
 
 load_dotenv()
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 token = os.getenv("VK_TOKEN")
 
 bot = Bot(token=token)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
+UPLOAD_DIR = os.path.join(BASE_DIR, 'static')
 
 def build_categories_keyboard(parent_id=None, current_path=None):
     try:
@@ -84,7 +89,7 @@ def build_categories_keyboard(parent_id=None, current_path=None):
 
         return keyboard.get_json()
     except Exception as e:
-        print(f"[LOG] Ошибка при создании клавиатуры: {e}")
+        logger.error(f"[LOG] Ошибка при создании клавиатуры: {e}")
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text(
             label="⚠ Ошибка! В главное меню",
@@ -93,9 +98,30 @@ def build_categories_keyboard(parent_id=None, current_path=None):
         return keyboard.get_json()
 
 
+
+@bot.on.message(text=["помощь", "help", "/help"])
+async def help_handler(message: Message):
+    help_text = (
+        "Доступные команды:\n"
+        "🔍 Поиск в каталоге - для поиска в каталоге\n"
+        "меню - вернуться в главное меню\n"
+        "помощь - показать это сообщение\n"
+        "Вы также можете вводить названия категорий для навигации."
+    )
+    keyboard = build_categories_keyboard(None)
+    await message.answer(help_text, keyboard=keyboard)
+
+
 @bot.on.raw_event(GroupEventType.MESSAGE_NEW)
-async def debug_event(event: GroupTypes.MessageNew):
-    print("[LOG] RAW EVENT:", event)
+async def debug_event(event: dict):
+    try:
+        message = event.get('object', {}).get('message', {})
+        logger.info(f"[LOG] Received message: {message}")
+    except Exception as e:
+        logger.error(f"Error in debug_event: {e}", exc_info=True)
+
+    # Если вам нужно больше информации о событии, вы можете логировать весь event
+    logger.debug(f"[LOG] Full event: {event}")
 
 
 @bot.on.message(payload={"cmd": "catalog_search"})
@@ -122,8 +148,8 @@ async def main_menu_handler(message: Message):
     print(f"[LOG] main_menu_handler triggered with message text: {message.text}, payload: {message.payload}")
     keyboard = build_categories_keyboard(None)
     await message.answer("Главное меню:", keyboard=keyboard)
-    print("[LOG] main_menu_handler completed")
-    
+    logger.info(f"[LOG] main_menu_handler completed")
+
     db_service.save_statistics(
         user_id=message.from_id,
         action_type='main_menu'
@@ -132,7 +158,7 @@ async def main_menu_handler(message: Message):
 
 @bot.on.message(payload={"cmd": "show_category"})
 async def show_category_handler(message: Message):
-    print(f"[LOG] show_category_handler triggered with payload: {message.payload}")
+    logger.info(f"[LOG] show_category_handler triggered with payload: {message.payload}")
     try:
         cat_id = message.payload["cat_id"]
         current_path = message.payload.get("path", [])
@@ -149,7 +175,7 @@ async def show_category_handler(message: Message):
         if answers:
             answer_text = "\n\n".join([answer.text for answer in answers])
             keyboard = build_categories_keyboard(cat.parent_id, current_path[:-1])
-            print(f"[LOG] Sending answers for cat_id {cat_id}")
+            logger.info(f"[LOG] Sending answers for cat_id {cat_id}")
             await message.answer(
                 answer_text,
                 keyboard=keyboard,
@@ -174,7 +200,7 @@ async def show_category_handler(message: Message):
             category_id=cat_id
         )
     except Exception as e:
-        print(f"[LOG] Ошибка в show_category_handler: {e}")
+        logger.error(f"[LOG] Ошибка в show_category_handler: {e}")
         keyboard = build_categories_keyboard(None)
         await message.answer("Произошла ошибка", keyboard=keyboard)
 
@@ -184,12 +210,12 @@ async def go_back_handler(message: Message):
     print(f"[LOG] go_back_handler triggered with payload: {message.payload}")
     try:
         payload = json.loads(message.payload) if isinstance(message.payload, str) else message.payload
-        print(f"[LOG] Parsed payload: {payload}")
+        logger.info(f"[LOG] Parsed payload: {payload}")
         
         current_parent_id = payload.get("parent_id")
         current_path = payload.get("path", [])
         
-        print(f"[LOG] Parent ID: {current_parent_id}, Path: {current_path}")
+        logger.info(f"[LOG] Parent ID: {current_parent_id}, Path: {current_path}")
         
         if not current_parent_id:
             keyboard = build_categories_keyboard(None)
@@ -214,31 +240,32 @@ async def go_back_handler(message: Message):
             )
 
     except json.JSONDecodeError as e:
-        print(f"[LOG] JSON parse error: {e}")
+        logger.error(f"[LOG] JSON parse error: {e}")
         keyboard = build_categories_keyboard(None)
         await message.answer("Ошибка обработки команды", keyboard=keyboard)
     except Exception as e:
-        print(f"[LOG] Ошибка в go_back_handler: {e}")
-        print(f"[LOG] Тип payload: {type(message.payload)}")
-        print(f"[LOG] Значение payload: {message.payload}")
+
+        logger.error(f"[LOG] Ошибка в go_back_handler: {e}")
+        logger.error(f"[LOG] Тип payload: {type(message.payload)}")
+        logger.error(f"[LOG] Значение payload: {message.payload}")
+
         keyboard = build_categories_keyboard(None)
         await message.answer("Произошла ошибка", keyboard=keyboard)
     finally:
-        print("[LOG] go_back_handler completed")
+        logger.info("[LOG] go_back_handler completed")
 
 
 @bot.on.message(text=["меню", "Меню"])
 async def text_menu_handler(message: Message):
-    print(f"[LOG] text_menu_handler triggered with message text: {message.text}")
+    logger.info("[LOG] text_menu_handler triggered")
     keyboard = build_categories_keyboard(None)
     await message.answer("Главное меню:", keyboard=keyboard)
-    print("[LOG] text_menu_handler completed")
+    logger.info("[LOG] text_menu_handler completed")
 
 
 @bot.on.message()
 async def default_handler(message: Message):
-    print(f"[LOG] default_handler triggered with message text: {message.text}, payload: {message.payload}")
-
+    logger.info(f"[LOG] default_handler triggered with message text: {message.text}, payload: {message.payload}")
     # Check if user is in "catalog_search_start" mode
     last_action = db_service.get_last_user_action(message.from_id)
     if last_action and last_action.action_type == 'catalog_search_start':
@@ -270,7 +297,7 @@ async def default_handler(message: Message):
         category = db_service.find_category_by_name(message.text)
         if category:
             keyboard = build_categories_keyboard(category.id, [category.name])
-            print(f"[LOG] Found category: {category.name} (id: {category.id})")
+            logger.info(f"[LOG] Found category: {category.name} (id: {category.id})")
             answers = db_service.find_answers_by_cat_id(category.id)
 
             if answers:
@@ -280,9 +307,13 @@ async def default_handler(message: Message):
                 image_path = None
                 for answer in answers:
                     if answer.image_path:
-                        image_path = answer.image_path
-                        print(f"[LOG] Found image for answer: {image_path}")
-                        break
+                        full_image_path = os.path.join(UPLOAD_DIR, answer.image_path)
+                        if os.path.exists(full_image_path):
+                            image_path = full_image_path
+                            logger.info(f"[LOG] Found image for answer: {image_path}")
+                            break
+                        else:
+                            logger.warning(f"[LOG] Image file not found: {full_image_path}")
 
                 # If an image was found, upload and send
                 if image_path:
@@ -308,7 +339,7 @@ async def default_handler(message: Message):
             )
             keyboard = build_categories_keyboard(None)
             await message.answer("Категория не найдена", keyboard=keyboard)
-    print("[LOG] default_handler completed")
+    logger.info("[LOG] default_handler completed")
 
 
 if __name__ == '__main__':

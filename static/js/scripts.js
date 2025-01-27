@@ -114,42 +114,78 @@ document.querySelectorAll('.edit-answer-form').forEach(form => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const flashMessages = document.querySelectorAll('.alert');
-    flashMessages.forEach(function(message) {
-      // Анимация появления
-      message.style.opacity = '0';
-      message.style.transform = 'translateY(-20px)';
-      setTimeout(() => {
-        message.style.opacity = '1';
-        message.style.transform = 'translateY(0)';
-      }, 100);
-  
-      // Автоматически скрывать сообщение через 5 секунд
-      setTimeout(function() {
-        message.style.opacity = '0';
-        message.style.transform = 'translateY(-20px)';
+    // Функция для отображения flash-сообщений
+    function showFlashMessage(message, category) {
+        const flashMessagesContainer = document.querySelector('.flash-messages-container');
+        if (!flashMessagesContainer) {
+            console.error('Flash messages container not found');
+            return;
+        }
+
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${category} animate__animated animate__fadeIn`;
+        alert.innerHTML = `
+            <div class="alert-content">
+                <span class="alert-icon">${category === 'success' ? '✅' : '❌'}</span>
+                <span class="alert-message">${message}</span>
+            </div>
+            <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+        `;
+        flashMessagesContainer.appendChild(alert);
+
+        // Автоматически удалить сообщение через 5 секунд
         setTimeout(() => {
-          message.remove();
-        }, 300);
-      }, 5000);
-  
-      // Добавляем эффект при наведении
-      message.addEventListener('mouseover', function() {
-        this.style.transform = 'scale(1.05)';
-      });
-  
-      message.addEventListener('mouseout', function() {
-        this.style.transform = 'scale(1)';
-      });
-  
-      // Обработчик для кнопки закрытия
-      const closeButton = message.querySelector('.alert-close');
-      closeButton.addEventListener('click', function() {
-        message.style.opacity = '0';
-        message.style.transform = 'translateY(-20px)';
-        setTimeout(() => {
-          message.remove();
-        }, 300);
-      });
-    });
-  });
+            alert.classList.remove('animate__fadeIn');
+            alert.classList.add('animate__fadeOut');
+            setTimeout(() => {
+                alert.remove();
+            }, 1000);
+        }, 5000);
+    }
+
+    // Обработчик отправки формы добавления категории
+    const addCategoryForm = document.getElementById('add-category-form');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/dialogs/add_category', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showFlashMessage(data.message, 'success');
+                    // Обновить список категорий на странице
+                    updateCategoryList(data.category);
+                    // Очистить форму
+                    this.reset();
+                } else {
+                    showFlashMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFlashMessage('Произошла ошибка при добавлении категории', 'error');
+            });
+        });
+    }
+
+    // Функция для обновления списка категорий
+    function updateCategoryList(newCategory) {
+        const categoryList = document.getElementById('category-list');
+        if (categoryList) {
+            const newItem = document.createElement('li');
+            newItem.setAttribute('data-category-id', newCategory.id);
+            newItem.innerHTML = `
+                ${newCategory.name}
+                <button onclick="deleteCategory(${newCategory.id})">Удалить</button>
+            `;
+            categoryList.appendChild(newItem);
+        }
+    }
+});

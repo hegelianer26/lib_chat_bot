@@ -22,36 +22,37 @@
             <li class="navbar-item"><a href="{{ url_for('config') }}" class="navbar-link">Настройки чата</a></li>
             <li class="navbar-item"><a href="{{ url_for('dialogs') }}" class="navbar-link">Диалоги</a></li>
             <li class="navbar-item"><a href="{{ url_for('statistics') }}" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="{{ url_for('users_list') }}" class="navbar-link">Пользователи</a></li>
         </ul>
     </nav>
         <!-- Блок для отображения флэш-сообщений -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="flash-messages-container">
-            <div class="flash-messages">
-              {% for category, message in messages %}
-                <div class="alert alert-{{ category }} animate__animated animate__fadeIn">
-                  <div class="alert-content">
-                    <span class="alert-icon">
-                      {% if category == 'success' %}
-                        ✅
-                      {% elif category == 'error' %}
-                        ❌
-                      {% elif category == 'warning' %}
-                        ⚠️
-                      {% else %}
-                        ℹ️
-                      {% endif %}
-                    </span>
-                    <span class="alert-message">{{ message }}</span>
-                  </div>
-                  <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
-                </div>
-              {% endfor %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages-container">
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} animate__animated animate__fadeIn">
+            <div class="alert-content">
+              <span class="alert-icon">
+                {% if category == 'success' %}
+                  ✅
+                {% elif category == 'error' %}
+                  ❌
+                {% elif category == 'warning' %}
+                  ⚠️
+                {% else %}
+                  ℹ️
+                {% endif %}
+              </span>
+              <span class="alert-message">{{ message }}</span>
             </div>
+            <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
           </div>
-        {% endif %}
-      {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}
 
       
 

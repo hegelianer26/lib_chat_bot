@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify
+from flask import Flask, request, render_template, redirect, url_for, jsonify, flash
 from db.database import init_db 
 import db.service_standalone as db_service
 from werkzeug.utils import secure_filename
