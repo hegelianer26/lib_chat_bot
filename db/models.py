@@ -211,12 +211,21 @@ class BotStatistics(Base):
     category = relationship("Category", back_populates="statistics")
 
     async def to_dict(self):
+
+        local_tz = pytz.timezone('Asia/Novosibirsk')  
+
+        def format_datetime(dt):
+            if dt:
+                local_dt = dt.astimezone(local_tz)
+                return local_dt.strftime('%d %B %Y, %H:%M')  
+            return None
+        
         return {
             'id': self.id,
             'bot_id': self.bot_id,
             'user_id': self.user_id,
             'action_type': self.action_type,
-            'timestamp': self.timestamp.isoformat(),
+            'timestamp': format_datetime(self.timestamp),
             'message_text': self.message_text
         }
 
@@ -242,8 +251,7 @@ class BotUser(Base):
     statistics = relationship("BotStatistics", back_populates="user")
 
     def to_dict(self):
-        # Получаем локальное время сервера
-        local_tz = pytz.timezone('Europe/Moscow')  # Замените на ваш часовой пояс
+        local_tz = pytz.timezone('Asia/Novosibirsk')  
 
         def format_datetime(dt):
             if dt:

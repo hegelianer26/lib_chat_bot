@@ -131,7 +131,7 @@ async def main():
 
     # Конфигурация Hypercorn
     config = Config()
-    config.bind = ["0.0.0.0:8003"]
+    config.bind = ["0.0.0.0:8000"]
 
     # Обработка сигналов для корректного завершения работы
     loop = asyncio.get_event_loop()

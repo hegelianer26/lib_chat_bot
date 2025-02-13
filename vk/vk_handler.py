@@ -6,6 +6,11 @@ from vkbottle.bot import Bot
 from api_client import APIClient
 from message_handlers import MessageHandlers
 from keyboard_builder import KeyboardBuilder
+from vkbottle.api import API
+from vkbottle.bot import BotLabeler, Message
+from vkbottle.dispatch.rules.base import CommandRule
+import threading
+from vkbottle.tools import LoopWrapper
 
 class VKHandler:
     def __init__(self, bot: Bot, bot_id: int, api_url: str, upload_dir: str):
@@ -18,8 +23,17 @@ class VKHandler:
         self.upload_dir = upload_dir
         self.polling_task = None
         self.is_active = True
-        self.loop = asyncio.get_event_loop()
-        
+        self.loop_wrapper = LoopWrapper()
+
+        self.labeler = BotLabeler()
+
+        @self.labeler.message(CommandRule("start"))
+        async def start_handler(message: Message):
+            await message.answer("Hello! This is your bot.")
+
+        self.bot.labeler = self.labeler
+        self.thread = None
+
         self.setup_logging()
         self.setup_handlers()
 
@@ -35,17 +49,36 @@ class VKHandler:
         self.message_handlers.setup()
 
     async def get_or_create_user(self, message):
-        user_data = {
-            "bot_id": self.bot_id,
-            "external_id": f"vk_{message.from_id}",
-            "first_name": message.from_id,
-            "last_name": None
-        }
-        
-        user = await self.api_client.post("/users/get_or_create", data=user_data)
-        if user and "user" in user:
-            return user["user"]
-        return None
+        try:
+            # Получаем информацию о пользователе через VK API
+            user_info = await self.bot.api.users.get(user_ids=[message.from_id], fields=["first_name", "last_name"])
+            if not user_info:
+                self.logger.error(f"Failed to fetch user info for user_id={message.from_id}")
+                return None
+
+            vk_user = user_info[0]
+            first_name = vk_user.first_name or "Unknown"
+            last_name = vk_user.last_name or "Unknown"
+
+            # Формируем данные пользователя
+            user_data = {
+                "bot_id": self.bot_id,
+                "external_id": f"{message.from_id}",
+                "first_name": first_name,
+                "last_name": last_name
+            }
+
+            # Вызываем API для создания/получения пользователя
+            response = await self.api_client.post("/users/get_or_create", data=user_data)
+            if response and "user" in response:
+                return response["user"]
+
+            self.logger.error(f"Failed to create or retrieve user: {response}")
+            return None
+
+        except Exception as e:
+            self.logger.error(f"Error while processing get_or_create_user: {e}", exc_info=True)
+            return None
 
     async def get_last_user_action(self, user_id: int):
         params = {"user_id": user_id}
@@ -102,8 +135,15 @@ class VKHandler:
             return None
         return response.get("category")
 
-    def start(self):
-        self.bot.run_forever()
+    async def start(self):
+        """Запуск бота"""
+        self.logger.info(f"Запуск бота {self.bot_id}")
+        await self.bot.run_polling()  # Запускаем polling асинхронно
+
+    def stop(self):
+        """Остановка бота"""
+        self.logger.info(f"Остановка бота {self.bot_id}")
+        self.bot.loop.stop()  # Останавливаем цикл
 
     def log_error(self, error: Exception, context: str = ""):
         self.logger.error(f"Error in {context}: {str(error)}", exc_info=True)

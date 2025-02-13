@@ -88,10 +88,29 @@ class ChatBotRepository(BaseRepository):
                 delete(BotSettings).where(BotSettings.bot_id == bot_id)
             )
 
-            # Step 3: Delete the bot itself
+            await self.db_session.execute(
+                delete(Answer).
+                where(Answer.category_id.in_(
+                    select(Category.id).where(Category.bot_id == bot_id)
+                ))
+            )
+
+            await self.db_session.execute(
+                delete(BotStatistics).where(BotStatistics.bot_id == bot_id)
+            )            
+
+            await self.db_session.execute(
+                delete(BotUser).where(BotUser.bot_id == bot_id)
+            )
+
+
+
+            await self.db_session.execute(
+                delete(Category).where(Category.bot_id == bot_id)
+            )
+
             await self.db_session.delete(bot)
 
-            # Step 4: Commit the transaction
             await self.db_session.commit()
 
         except Exception as e:

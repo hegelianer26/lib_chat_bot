@@ -2,6 +2,7 @@ from quart import Blueprint, request, render_template, redirect, url_for, flash,
 from quart_auth import login_required, current_user
 from db.redis_repository import RedisRepository
 import logging
+from db.redis_db import get_redis
 
 logger = logging.getLogger(__name__)
 
@@ -134,31 +135,31 @@ async def update_tg_settings(bot_id):
     return redirect(url_for('config.bot_config', bot_id=bot_id))
 
 
-
 @config_bp.route('/bot/<int:bot_id>/config/vk', methods=['POST'])
 @login_required
 async def update_vk_settings(bot_id):
     logger.info(f"Начало обновления настроек VK для бота {bot_id}")
     chatbot_repo = current_app.repositories['chatbot_repo']
     bot_settings_repo = current_app.repositories['bot_settings_repo']
-
     bot = await chatbot_repo.get_bot_by_id(bot_id)
-    if not bot or bot.user_id != int(current_user.auth_id):  # Проверка прав доступа
+    
+    # Проверка прав доступа
+    if not bot or bot.user_id != int(current_user.auth_id):
         await flash('Бот не найден или у вас нет прав доступа', 'error')
         return redirect(url_for('bots.bots_list'))
-
+    
     form = await request.form
     vk_token = form.get('vk_token')
     vk_button_color = form.get('vk_button_color')
-    vk_is_active = form.get('vk_is_active') == 'on'
+    vk_is_active = form.get('vk_is_active') == 'on'  # Получаем bool значение
 
     try:
-        # Обновление настроек бота
+        # Обновление настроек бота в базе данных
         settings = await bot_settings_repo.get_settings_by_bot_id(bot_id)
         if settings:
             update_data = {
                 'vk_button_color': vk_button_color,
-                'vk_is_active': vk_is_active,
+                'vk_is_active': vk_is_active,  # Сохраняем как bool в БД
             }
             await bot_settings_repo.update_settings(bot_id, **update_data)
 
@@ -167,26 +168,26 @@ async def update_vk_settings(bot_id):
             await bot.set_vk_token(vk_token)
             await chatbot_repo.update_bot(bot_id, vk_token_encrypted=bot.vk_token_encrypted)
 
+        # Обновление данных в Redis
         bot_data = await RedisRepository.get_bot(bot_id)
         bot_data.update({
+            "vk_token": vk_token,
             "vk_button_color": vk_button_color,
-            "vk_is_active": vk_is_active,
-            "has_vk": True
+            "vk_is_active": str(vk_is_active).lower(),  # Преобразуем bool в строку ("true" или "false")
+            "has_vk": True,
         })
         await RedisRepository.save_bot(bot_id, bot_data)
 
-        # Если бот активирован, запустите его
-        if vk_is_active and hasattr(current_app, 'vk_service'):
-            await current_app.vk_service.start_bot(bot_id)
+        # Отправляем уведомление о изменении
+        async with get_redis() as redis:  # Use the same Redis connection mechanism
+            await redis.publish('bot_updates', bot_id)
 
         await flash('Настройки VK успешно сохранены', 'success')
-
     except Exception as e:
         logger.exception(f"Ошибка при сохранении настроек VK для бота {bot_id}: {str(e)}")
         await flash(f'Произошла ошибка при сохранении настроек VK: {str(e)}', 'error')
 
     return redirect(url_for('config.bot_config', bot_id=bot_id))
-
 
 @config_bp.route('/start-vk-bot/<int:bot_id>', methods=["POST"])
 @login_required

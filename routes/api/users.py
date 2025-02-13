@@ -29,7 +29,7 @@ async def get_or_create_user():
         first_name=first_name,
         last_name=last_name
     )
-    return jsonify({"user": await user.to_dict()}), 200
+    return jsonify({"user": user.to_dict()}), 200
 
 @users_api_bp.route('/users/update_last_interaction', methods=['POST'])
 async def update_last_interaction():

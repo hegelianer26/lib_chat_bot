@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 def main():
     bot_token = "vk1.a.KS_I-q0k87tNkJAK7jIxSswDftL2UqNjksACcDtHwN_oC4tftQkkporOE3y37o-C4IVdHpDchTgYy1nCydN47uqg70WXyCsR0z-RuagLWet8kipA9OLTQ9qjvKRxQzfkJMtsWj3GYvQ14-rT9rni583nHYQT0PicKglCA3k37u8TQdKlqVW8s5nz-ulpV60aRvqRHZnknXjZ6JVIxlLw6Q"  # Замените на ваш токен бота
-    bot_id = 1  # Замените на ваш bot_id
+    bot_id = 2  # Замените на ваш bot_id
     api_url = "http://0.0.0.0:8003/api"  # URL вашего API
     upload_dir = "uploads"  # Директория для загрузок
 

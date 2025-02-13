@@ -33,11 +33,9 @@ async def create_bot():
             }
             await RedisRepository.save_bot(new_bot.id, bot_data)
 
-            await flash('Бот успешно создан', 'success')
             return redirect(url_for('bots.bot_detail', bot_id=new_bot.id))
         except Exception as e:
             logger.error(f"Ошибка при создании бота: {str(e)}")
-            await flash(f'Произошла ошибка при создании бота: {str(e)}', 'error')
     
     return redirect(url_for('bots.bots_list'))
 
@@ -46,23 +44,22 @@ async def create_bot():
 @login_required
 async def delete_bot(bot_id):
     chatbot_repo = current_app.repositories["chatbot_repo"]
-    bot_settings_repo = current_app.repositories["bot_settings_repo"]
+    
     
     bot = await chatbot_repo.get_bot_by_id(bot_id)
     if bot and bot.user_id == int(current_user.auth_id):
         try:
             # Удаление настроек
-            await bot_settings_repo.delete_settings(bot_id)
+
             # Удаление бота из базы данных
             await chatbot_repo.delete_bot(bot_id)
             # Удаление бота из Redis
             await RedisRepository.delete_bot(bot_id)
             
-            await flash('Бот успешно удален', 'success')
         except Exception as e:
             logger.error(f"Ошибка при удалении бота {bot_id}: {str(e)}")
-            await flash(f'Произошла ошибка при удалении бота: {str(e)}', 'error')
     else:
+
         await flash('Бот не найден или у вас нет прав на его удаление', 'error')
     
     return redirect(url_for('bots.bots_list'))
@@ -80,11 +77,6 @@ async def bot_detail(bot_id):
     if bot and bot.user_id == int(current_user.auth_id):
         return await render_template('bot_detail.html', bot=bot)
     
-    await flash('Бот не найден', 'error')
     return redirect(url_for('bots.bots_list'))
-
-
-
-
 
 
