@@ -1,0 +1,17 @@
+FLASK_SECRET_KEY="bdd592249a282ad47f59beff3ebec25201602b2cf237282f"
+
+VUFIND="https://vufind.lib.cuhk.edu.hk/vf/Record/"
+
+SECRET_KEY="UQyg0spRT7RewsbGwf-cD9GqYqRR14Ie_TX2wuftWns="
+
+DB_USER=user
+DB_PASSWORD=password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=mydatabase
+
+REDIS_PORT=6379
+REDIS_PASSWORD=password
+REDIS_HOST=localhost
+
+VK_TOKEN = vk1.a.KS_I-q0k87tNkJAK7jIxSswDftL2UqNjksACcDtHwN_oC4tftQkkporOE3y37o-C4IVdHpDchTgYy1nCydN47uqg70WXyCsR0z-RuagLWet8kipA9OLTQ9qjvKRxQzfkJMtsWj3GYvQ14-rT9rni583nHYQT0PicKglCA3k37u8TQdKlqVW8s5nz-ulpV60aRvqRHZnknXjZ6JVIxlLw6Q
