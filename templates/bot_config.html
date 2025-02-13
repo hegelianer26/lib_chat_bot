@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки бота "{{ bot.name }}"</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Навигация -->
+    <a href="{{ url_for('bots.bots_list') }}" class="back-arrow" title="Вернуться к списку ботов">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
+    <a href="{{ url_for('users.user_detail', user_id=current_user.auth_id) }}" class="forward-arrow" title="Настройки профиля">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li class="navbar-item"><a href="{{ url_for('config.bot_config', bot_id=bot.id) }}" class="navbar-link">Настройки</a></li>
+            <li class="navbar-item"><a href="{{ url_for('dialogs.dialogs', bot_id=bot.id) }}" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="{{ url_for('statistics.statistics', bot_id=bot.id) }}" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="{{ url_for('bot_users.users_list', bot_id=bot.id) }}" class="navbar-link">Пользователи</a></li>
+        </ul>
+    </nav>
+
+    <div class="content-wrapper">
+
+        <!-- Общие настройки -->
+        <div class="config-section">
+            <h1>Настройки бота "{{ bot.name }}"</h1>
+            <br></br>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Форма общих настроек -->
+            <form method="POST" action="{{ url_for('config.update_general_settings', bot_id=bot.id) }}">
+                <h2>Общие настройки</h2>
+                <div class="form-group">
+                    <label for="bot_name">Название бота</label>
+                    <input type="text" id="bot_name" name="bot_name" value="{{ bot.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="welcome_message">Приветственное сообщение</label>
+                    <textarea id="welcome_message" name="welcome_message">{{ settings.welcome_message }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="help_message">Сообщение помощи</label>
+                    <textarea id="help_message" name="help_message">{{ settings.help_message }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить общие настройки</button>
+            </form>
+        </div>
+
+        <!-- Настройки VK -->
+        <div class="config-section">
+            <form method="POST" action="{{ url_for('config.update_vk_settings', bot_id=bot.id) }}">
+                <h2>Настройки VK</h2>
+                <div class="form-group">
+                    <label for="vk_token">VK Token</label>
+                    <input type="password" id="vk_token" name="vk_token" placeholder="Введите новый токен VK">
+                    {% if vk_token_last_part %}
+                    <span>(Текущий токен: *******{{ vk_token_last_part }})</span>
+                    {% else %}
+                    <span>(Токен не установлен)</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="vk_button_color">Цвет кнопок VK</label>
+                    <input type="color" id="vk_button_color" name="vk_button_color" value="{{ settings.vk_button_color or '#000000' }}">
+                </div>
+                <div class="form-group">
+                    <label for="vk_is_active">
+                        <input type="checkbox" id="vk_is_active" name="vk_is_active" {% if settings.vk_is_active %}checked{% endif %}>
+                        Активировать бота VK
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить настройки VK</button>
+            </form>
+        </div>
+
+        <!-- Настройки Telegram -->
+        <div class="config-section">
+            <form method="POST" action="{{ url_for('config.update_tg_settings', bot_id=bot.id) }}">
+                <h2>Настройки Telegram</h2>
+                <div class="form-group">
+                    <label for="tg_token">Telegram Token</label>
+                    <input type="password" id="tg_token" name="tg_token" placeholder="Введите новый токен Telegram">
+                    {% if settings.tg_token %}
+                        <span>(Текущий токен: *******{{ settings.tg_token[-4:] }})</span>
+                    {% else %}
+                        <span>(Токен не установлен)</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="tg_button_color">Цвет кнопок Telegram</label>
+                    <input type="color" id="tg_button_color" name="tg_button_color" value="{{ settings.tg_button_color or '#000000' }}">
+                </div>
+                <div class="form-group">
+                    <label for="tg_is_active">
+                        <input type="checkbox" id="tg_is_active" name="tg_is_active" {% if settings.tg_is_active %}checked{% endif %}>
+                        Активировать бота Telegram
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить настройки Telegram</button>
+            </form>
+        </div>
+
+        <!-- Дополнительные действия -->
+        <div class="config-section">
+            <h2>Дополнительные действия</h2>
+            <form method="POST" action="{{ url_for('config.restart_bot', bot_id=bot.id) }}" class="inline-form">
+                <button type="submit" class="btn btn-warning">Перезапустить бота</button>
+            </form>
+            <form method="POST" action="{{ url_for('config.delete_bot', bot_id=bot.id) }}" class="inline-form" onsubmit="return confirm('Вы уверены, что хотите удалить этого бота?');">
+                <button type="submit" class="btn btn-danger">Удалить бота</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

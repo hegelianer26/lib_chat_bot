@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки профиля</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .form-group input[type="email"],
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input[type="email"]:focus,
+        .form-group input[type="text"]:focus,
+        .form-group input[type="password"]:focus {
+            border-color: #1976d2;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        .button-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background-color: #1565c0;
+            transform: translateY(-2px);
+        }
+
+        .button-danger {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .button-danger:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <a href="{{ url_for('bots.bots_list') }}" class="back-arrow" title="Вернуться к списку ботов">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
+
+    <div class="main-content">
+        <div class="config-section">
+            <h1>Настройки профиля</h1>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        
+            <form method="POST" action="{{ url_for('users.user_detail', user_id=user.id) }}">
+                <div class="form-group">
+                    <label for="first_name">Имя</label>
+                    <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="last_name">Фамилия</label>
+                    <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="organization_name">Название организации</label>
+                    <input type="text" id="organization_name" name="organization_name" value="{{ user.organization_name }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password">Новый пароль</label>
+                    <input type="password" id="new_password" name="new_password" placeholder="Оставьте пустым, если не хотите менять">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Подтвердите новый пароль</label>
+                    <input type="password" id="confirm_password" name="confirm_password">
+                </div>
+        
+                <div class="button-group">
+                    <button type="submit" class="button button-primary">Сохранить изменения</button>
+                    <button type="button" class="button button-danger" onclick="document.getElementById('logout-form').submit();">Выйти из аккаунта</button>
+                </div>
+            </form>
+
+            <form id="logout-form" method="POST" action="{{ url_for('users.logout') }}" style="display: none;"></form>
+        </div>
+    </div>
+</body>
+</html>

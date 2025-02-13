@@ -16,15 +16,31 @@
 
 </head>
 <body>
-    
+    <a href="{{ url_for('bots.bots_list') }}" class="back-arrow" title="Вернуться к списку ботов">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
+
+    <a href="{{ url_for('users.user_detail', user_id=current_user.auth_id) }}" class="forward-arrow" title="Настройки профиля">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
+
+
+
     <nav class="navbar">
         <ul class="navbar-list">
-            <li class="navbar-item"><a href="{{ url_for('config') }}" class="navbar-link">Настройки чата</a></li>
-            <li class="navbar-item"><a href="{{ url_for('dialogs') }}" class="navbar-link">Диалоги</a></li>
-            <li class="navbar-item"><a href="{{ url_for('statistics') }}" class="navbar-link">Статистика</a></li>
-            <li class="navbar-item"><a href="{{ url_for('users_list') }}" class="navbar-link">Пользователи</a></li>
+            <li class="navbar-item"><a href="{{ url_for('config.bot_config', bot_id=bot.id) }}" class="navbar-link">Настройки</a></li>
+            <li class="navbar-item"><a href="{{ url_for('dialogs.dialogs', bot_id=bot.id) }}" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="{{ url_for('statistics.statistics', bot_id=bot.id) }}" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="{{ url_for('bot_users.users_list', bot_id=bot.id) }}" class="navbar-link">Пользователи</a></li>
         </ul>
     </nav>
+
+
+<div class="main-content">
         <!-- Блок для отображения флэш-сообщений -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -73,13 +89,10 @@
 
     <h1>Управление диалогами</h1>
 
-
-
-
     <!-- Форма для добавления категории -->
     <div class="form-section">
         <h2>Добавить категорию</h2>
-        <form method="POST" action="{{ url_for('add_category') }}">
+        <form method="POST" action="{{ url_for('dialogs.add_category', bot_id=bot.id) }}">
             <label>Название категории:
                 <input type="text" name="category_name" placeholder="Категория" required>
             </label>
@@ -94,25 +107,24 @@
     </div>
 
     <!-- Форма для добавления ответа -->
-    <div class="form-section">
-        <h2>Добавить ответ</h2>
-        <form method="POST" action="{{ url_for('add_answer') }}" enctype="multipart/form-data">
-            <label>Текст ответа:
-                <textarea name="answer_text" cols="40" rows="3" placeholder="Текст ответа" required></textarea>
-            </label>
-            <label>Категория:
-                <select name="category_id">
-                    {% for c in categories %}
-                    <option value="{{ c.id }}">{{ c.name }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label>Фото (необязательно):
-                <input type="file" name="answer_image" accept="image/*">
-            </label>
-            <button type="submit">Добавить ответ</button>
-        </form>
-    </div>
+<!-- Форма для добавления ответа -->
+<div class="form-section">
+    <h2>Добавить ответ</h2>
+    <form method="POST" action="{{ url_for('dialogs.add_answer', bot_id=bot.id) }}" enctype="multipart/form-data">
+        <label>Текст ответа:
+            <textarea name="answer_text" cols="40" rows="3" placeholder="Текст ответа" required></textarea>
+        </label>
+        <label>Категория:
+            <select name="category_id" class="category-select">
+                {{ render_category_tree(categories) }}
+            </select>
+        </label>
+        <label>Фото (необязательно):
+            <input type="file" name="answer_image" accept="image/*">
+        </label>
+        <button type="submit">Добавить ответ</button>
+    </form>
+</div>
 
     {% macro render_category_tree(category) %}
     <li>
@@ -127,12 +139,12 @@
 
         <span class="category-name">#{{ category.id }} {{ category.name }}</span>
 
-        <form method="POST" action="{{ url_for('delete_category') }}" class="inline-form">
+        <form method="POST" action="{{ url_for('dialogs.delete_category', bot_id=bot.id) }}" class="inline-form">
             <input type="hidden" name="cat_id" value="{{ category.id }}">
             <button type="submit" class="btn-delete">Удалить</button>
         </form>
 
-        <form method="POST" action="{{ url_for('edit_category') }}" class="inline-form">
+        <form method="POST" action="{{ url_for('dialogs.edit_category', bot_id=bot.id) }}" class="inline-form">
             <input type="hidden" name="cat_id" value="{{ category.id }}">
             <input type="text" name="new_name" class="edit-field" placeholder="Новое имя">
             <button type="submit">Изм.</button>
@@ -147,14 +159,14 @@
                             <strong>Ответ #{{ ans.id }}</strong>
                             <div id="view-answer-{{ ans.id }}">
                                 <p>{{ ans.text }}</p>
-                                <form method="POST" action="{{ url_for('delete_answer') }}" class="inline-form">
+                                <form method="POST" action="{{ url_for('dialogs.delete_answer', bot_id=bot.id) }}" class="inline-form">
                                     <input type="hidden" name="ans_id" value="{{ ans.id }}">
                                     <button type="submit" class="btn-delete-answer">Удалить</button>
                                 </form>
                                 <button onclick="showEditForm({{ ans.id }})">Редактировать</button>
                             </div>
                             <div id="edit-form-{{ ans.id }}" style="display: none;">
-                                <form method="POST" action="{{ url_for('edit_answer') }}" class="edit-answer-form" enctype="multipart/form-data">
+                                <form method="POST" action="{{ url_for('dialogs.edit_answer', bot_id=bot.id) }}" class="edit-answer-form" enctype="multipart/form-data">
                                     <input type="hidden" name="ans_id" value="{{ ans.id }}">
                                     <textarea id="edit-answer-{{ ans.id }}" name="new_text">{{ ans.text }}</textarea>
                                     <input type="file" name="new_image" class="image-input">
@@ -169,44 +181,50 @@
                                      class="answer-thumbnail" 
                                      onclick="showFullImage(this.src)"
                                      alt="Изображение ответа">
-                                     <form method="POST" action="{{ url_for('delete_image') }}" class="inline-form">
-                                        <input type="hidden" name="ans_id" value="{{ ans.id }}">
-                                        <button type="submit" class="btn-delete-photo">Удалить фото</button>
-                                    </form>
-                                </div>
-                                {% endif %}
+                                <form method="POST" action="{{ url_for('dialogs.delete_answer', bot_id=bot.id) }}" class="inline-form">
+                                    <input type="hidden" name="ans_id" value="{{ ans.id }}">
+                                    <input type="hidden" name="delete_image_only" value="true">
+                                    <button type="submit" class="btn-delete-photo">Удалить фото</button>
+                                </form>
                             </div>
-                            {% endfor %}
+                            {% endif %}
                         </div>
-                    {% endif %}
-    
-                    {% for child_cat in category.children %}
-                        {{ render_category_tree(child_cat) }}
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </li>
-        {% endmacro %}
-    
-        <div class="form-section">
-            <h2>Структура категорий</h2>
-            <div class="toggle-buttons">
-                <button onclick="collapseAll()">Свернуть все</button>
-                <button onclick="expandAll()">Развернуть все</button>
-            </div>
-            <ul class="category-tree">
-                {% for root_cat in root_categories %}
-                    {{ render_category_tree(root_cat) }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% for child_cat in category.children %}
+                    {{ render_category_tree(child_cat) }}
                 {% endfor %}
             </ul>
+        {% endif %}
+    </li>
+    {% endmacro %}
+
+    <div class="form-section">
+        <h2>Структура категорий</h2>
+        <div class="toggle-buttons">
+            <button onclick="collapseAll()">Свернуть все</button>
+            <button onclick="expandAll()">Развернуть все</button>
         </div>
+        <ul class="category-tree">
+            {% for root_cat in root_categories %}
+                {{ render_category_tree(root_cat) }}
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Модальное окно для просмотра изображений -->
+    <div id="imageModal" class="modal">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
     
-        <!-- Модальное окно для просмотра изображений -->
-        <div id="imageModal" class="modal">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-            <img class="modal-content" id="modalImage">
-        </div>
-        <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-        
-    </body>
-    </html>
+
+
+
+    </div>
+
+</body>
+</html>

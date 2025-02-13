@@ -6,16 +6,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+
     <nav class="navbar">
         <ul class="navbar-list">
-            <li class="navbar-item"><a href="{{ url_for('config.bot_config', bot_id=bot.id) }}" class="navbar-link">Настройки</a></li>
-            <li class="navbar-item"><a href="{{ url_for('dialogs.dialogs', bot_id=bot.id) }}" class="navbar-link">Диалоги</a></li>
-            <li class="navbar-item"><a href="{{ url_for('statistics.statistics', bot_id=bot.id) }}" class="navbar-link">Статистика</a></li>
-            <li class="navbar-item"><a href="{{ url_for('bot_users.users_list', bot_id=bot.id) }}" class="navbar-link">Пользователи</a></li>
+            <li class="navbar-item"><a href="/config" class="navbar-link">Настройки чата</a></li>
+            <li class="navbar-item"><a href="/dialogs" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="/statistics" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="/users" class="navbar-link">Пользователи</a></li>
         </ul>
     </nav>
-    
-    
     
     <div class="config-section">
         <h1>Настройки бота</h1>
@@ -42,15 +41,15 @@
             </div>
     
             <div class="form-group">
-                <label for="tg_token">Telegram Token</label>
-                <div class="token-display">
-                    {% if config.tg_token %}
-                        <span class="masked-value">•••••{{ config.tg_token[-7:] }}</span>
+                <label for="database_url">База данных</label>
+                <div class="db-display">
+                    {% if config.database_url %}
+                        <span class="masked-value">•••••{{ config.database_url[-7:] }}</span>
                     {% endif %}
                 </div>
-                <input type="password" id="tg_token" name="tg_token" 
-                       placeholder="{% if config.tg_token %}Оставьте пустым, чтобы не менять{% else %}Введите токен{% endif %}">
-                <div class="help-text">Токен Telegram бота</div>
+                <input type="password" id="database_url" name="database_url" 
+                       placeholder="{% if config.database_url %}Оставьте пустым, чтобы не менять{% else %}Введите URL базы данных{% endif %}">
+                <div class="help-text">URL подключения к базе данных</div>
             </div>
     
             <button type="submit" class="button">Сохранить настройки</button>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои боты</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+</head>
+
+<body>
+    <a href="{{ url_for('users.user_detail', user_id=current_user.auth_id) }}" class="back-arrow" title="Вернуться к списку ботов">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
+    
+<div class="main-content">
+
+
+    <h1>Мои боты</h1>
+
+    <div class="dashboard-grid">
+        <!-- Карточка для добавления нового бота -->
+        <div class="dashboard-card" id="openModal">
+            <div class="dashboard-card-content">
+                <i class="fas fa-plus"></i>
+                <h2>Добавить бота</h2>
+                <p>Создать нового бота</p>
+            </div>
+        </div>
+
+        <!-- Карточки существующих ботов -->
+        {% for bot in bots %}
+        <div class="dashboard-card">
+            <a href="{{ url_for('bots.bot_detail', bot_id=bot.id) }}" class="dashboard-card-link">
+                <div class="dashboard-card-content">
+                    <i class="fas fa-robot"></i>
+                    <h2>{{ bot.name }}</h2>
+                    <p>Нажмите для подробностей</p>
+                </div>
+            </a>
+            <form action="{{ url_for('bots.delete_bot', bot_id=bot.id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить этого бота?');">
+                <button type="submit" class="delete-bot-button" title="Удалить бота">
+                    <i class="fas fa-trash-alt delete-bot-icon"></i>
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not bots %}
+    <p class="no-bots-message">У вас пока нет ботов. Создайте своего первого бота!</p>
+    {% endif %}
+</div>
+
+
+<!-- Модальное окно -->
+<div id="createBotModal" class="modal-fancy">
+    <div class="modal-content-fancy">
+        <span class="close-fancy">&times;</span>
+        <h2>Создать нового бота</h2>
+        <form id="createBotForm" method="POST" action="{{ url_for('bots.create_bot') }}">
+            <div class="form-group">
+                <label for="bot_name">Название бота:</label>
+                <input type="text" id="bot_name" name="bot_name" required>
+            </div>
+            <button type="submit" class="button">Создать бота</button>
+        </form>
+    </div>
+</div>
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p>Научная библиотека</p>
+            <p>Томский государственный университет</p>
+        </div>
+        <div class="footer-section">
+            <p><a href="https://lib.tsu.ru" target="_blank">Lib.tsu.ru</a></p>
+            <p><a href="{{ url_for('static', filename='terms_of_use.pdf') }}">Условия пользования</a></p>
+        </div>
+        <div class="footer-section">
+            <p>По вопросам сотрудничества:</p>
+            <p><a href="mailto:library@lib.tsu.ru">library@lib.tsu.ru</a></p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>Разработано <a href="https://github.com/hegelianer26" target="_blank">hegeliner26</a></p>
+        <div class="social-icons">
+            <a href="#" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+        </div>
+    </div>
+</footer>
+<script>
+    var modal = document.getElementById("createBotModal");
+    var btn = document.getElementById("openModal");
+    var span = document.getElementsByClassName("close-fancy")[0];
+
+    btn.onclick = function() {
+        modal.style.display = "block";
+        setTimeout(() => {
+            modal.classList.add("show");
+        }, 10);
+    }
+
+    span.onclick = function() {
+        modal.classList.remove("show");
+        setTimeout(() => {
+            modal.style.display = "none";
+        }, 300);
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.classList.remove("show");
+            setTimeout(() => {
+                modal.style.display = "none";
+            }, 300);
+        }
+    }
+</script>
+</body>
+</html>

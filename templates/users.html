@@ -2,51 +2,142 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Пользователи бота</title>
+    <title>Пользователи бота {{ bot.name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css">
+    <!-- jQuery и DataTables JS -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
 </head>
 <body>
+    <!-- Вернуться к списку ботов -->
+    <a href="{{ url_for('bots.bots_list') }}" class="back-arrow" title="Вернуться к списку ботов">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
 
+    <!-- Настройки профиля -->
+    <a href="{{ url_for('users.user_detail', user_id=current_user.auth_id) }}" class="forward-arrow" title="Настройки профиля">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
+
+    <!-- Меню навигации -->
     <nav class="navbar">
         <ul class="navbar-list">
-            <li class="navbar-item"><a href="/config" class="navbar-link">Настройки чата</a></li>
-            <li class="navbar-item"><a href="/dialogs" class="navbar-link">Диалоги</a></li>
-            <li class="navbar-item"><a href="/statistics" class="navbar-link">Статистика</a></li>
-            <li class="navbar-item"><a href="/users" class="navbar-link">Пользователи</a></li>
+            <li class="navbar-item"><a href="{{ url_for('config.bot_config', bot_id=bot.id) }}" class="navbar-link">Настройки</a></li>
+            <li class="navbar-item"><a href="{{ url_for('dialogs.dialogs', bot_id=bot.id) }}" class="navbar-link">Диалоги</a></li>
+            <li class="navbar-item"><a href="{{ url_for('statistics.statistics', bot_id=bot.id) }}" class="navbar-link">Статистика</a></li>
+            <li class="navbar-item"><a href="{{ url_for('bot_users.users_list', bot_id=bot.id) }}" class="navbar-link">Пользователи</a></li>
         </ul>
     </nav>
 
-    <div class="form-section">
-        <h1>Пользователи бота</h1>
-        <table class="users-table">
-            <thead>
-                <tr>
-                    <th>Пользователь</th>
-                    <th>Запросов</th>
-                    <th>Первое обращение</th>
-                    <th>Последнее обращение</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user_id, requests, vk_user, first_seen, last_seen in users %}
-                <tr>
-                    <td class="user-name">
-                        {% if vk_user %}
-                            <img src="{{ vk_user.photo_50 }}" class="user-avatar" alt="Avatar">
-                            <a href="https://vk.com/id{{ user_id }}" target="_blank">
-                                {{ vk_user.first_name }} {{ vk_user.last_name }}
-                            </a>
-                        {% else %}
-                            ID: {{ user_id }}
-                        {% endif %}
-                    </td>
-                    <td>{{ requests }}</td>
-                    <td>{{ first_seen }}</td>
-                    <td>{{ last_seen }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Основной контент -->
+    <div class="main-content">
+        <div class="form-section">
+            <h1>Пользователи бота {{ bot.name }}</h1>
+    
+            <!-- Форма для фильтрации -->
+            <form id="filterForm">
+                <label for="sourceFilter">Источник:</label>
+                <select id="sourceFilter" name="source">
+                    <option value="">Все</option>
+                    <option value="vk">VK</option>
+                    <option value="telegram">Telegram</option>
+                </select>
+    
+                <label for="searchInput">Поиск:</label>
+                <input type="text" id="searchInput" name="search" placeholder="Введите имя или username">
+    
+                <button type="submit">Применить фильтр</button>
+            </form>
+    
+            <!-- Таблица пользователей -->
+            <table id="usersTable" class="display users-table">
+                <thead>
+                    <tr>
+                        <th>Пользователь</th>
+                        <th>Источник</th>
+                        <th>Дата создания</th>
+                        <th>Последнее взаимодействие</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <!-- Скрипт для DataTables -->
+    <script>
+        $(document).ready(function () {
+            let table = $('#usersTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": function (data, callback, settings) {
+                    // Получаем параметры фильтрации из формы
+                    const source = $('#sourceFilter').val();
+                    const searchValue = $('#searchInput').val();
+
+                    // Отправляем дополнительные параметры в AJAX-запрос
+                    $.ajax({
+                        url: "{{ url_for('bot_users.filter_users', bot_id=bot.id) }}",
+                        data: {
+                            draw: data.draw,
+                            start: data.start,
+                            length: data.length,
+                            search: { value: searchValue }, // Поисковый запрос
+                            order: data.order,             // Сортировка
+                            source: source                 // Источник фильтрации
+                        },
+                        success: function (response) {
+                            callback(response);
+                        }
+                    });
+                },
+                "columns": [
+                    { 
+                        "data": "user_name", 
+                        "render": function (data, type, row) {
+                            // Генерируем HTML для имени пользователя
+                            let link = row.source === 'vk'
+                                ? `<a href="https://vk.com/id${row.external_id}" target="_blank">${data}</a>`
+                                : row.source === 'telegram'
+                                    ? `<a href="https://t.me/${row.username}" target="_blank">${data}</a>`
+                                    : data;
+                            return link;
+                        } 
+                    },
+                    { "data": "source" },
+                    { "data": "created_at" },
+                    { "data": "last_interaction" },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            const botId = {{ bot.id }};
+                            const userId = row.id;
+                            const detailsUrl = `/bot_users/${botId}/users/${userId}`;
+                            return `
+                                <a href="${detailsUrl}" class="btn btn-info">Подробнее</a>
+                            `;
+                        }
+                    }
+                ],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Russian.json"
+                }
+            });
+
+            // Обработка отправки формы для обновления таблицы
+            $('#filterForm').on('submit', function (e) {
+                e.preventDefault();
+                table.ajax.reload(); // Перезагружаем данные таблицы
+            });
+        });
+    </script>
 </body>
 </html>
