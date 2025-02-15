@@ -136,14 +136,18 @@ class VKHandler:
         return response.get("category")
 
     async def start(self):
-        """Запуск бота"""
+        """Запуск бота в отдельном потоке"""
         self.logger.info(f"Запуск бота {self.bot_id}")
-        await self.bot.run_polling()  # Запускаем polling асинхронно
+        self.thread = threading.Thread(target=self.bot.run_forever, daemon=True)
+        self.thread.start()
+
 
     def stop(self):
         """Остановка бота"""
         self.logger.info(f"Остановка бота {self.bot_id}")
-        self.bot.loop.stop()  # Останавливаем цикл
+        self.bot.loop_wrapper.stop()  # Останавливаем цикл
+        if self.thread:
+            self.thread.join()  # Ждем завершения потока
 
     def log_error(self, error: Exception, context: str = ""):
         self.logger.error(f"Error in {context}: {str(error)}", exc_info=True)

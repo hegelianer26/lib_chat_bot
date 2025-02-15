@@ -52,14 +52,15 @@ class VKBotManager:
         bot = Bot(token=bot_token)
 
         vk_handler = VKHandler(bot, bot_id, api_url, upload_dir)
-        self.bots[bot_id] = asyncio.create_task(vk_handler.start())  # Запускаем бота через create_task
+        self.bots[bot_id] = vk_handler
+        await vk_handler.start()  # Запускаем бота в отдельном потоке
         await RedisRepository.mark_bot_as_running(bot_id)
         print(f"Бот {bot_id} запущен")
 
     async def stop_bot(self, bot_id):
         if await RedisRepository.is_bot_running(bot_id):
             if bot_id in self.bots:
-                self.bots[bot_id].stop()  # Stop the bot's thread
+                self.bots[bot_id].stop()  # Останавливаем бота
                 del self.bots[bot_id]
             await RedisRepository.mark_bot_as_stopped(bot_id)
             print(f"Bot {bot_id} stopped")

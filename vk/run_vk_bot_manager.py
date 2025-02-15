@@ -1,4 +1,5 @@
 import asyncio
+import threading
 from vk_bot_manager import VKBotManager
 
 async def main():
