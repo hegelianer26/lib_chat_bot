@@ -2,6 +2,9 @@ from redis_repository import RedisRepository
 from vkbottle.bot import Bot
 from vk_handler import VKHandler
 import asyncio
+from vkbottle.http import AiohttpClient
+from vkbottle.api import API
+import threading
 
 class VKBotManager:
     def __init__(self):
@@ -36,7 +39,6 @@ class VKBotManager:
 
 
     async def start_bot(self, bot_data):
-        """Запуск бота"""
         bot_id = int(bot_data['id'])
         bot_token = bot_data.get('vk_token')
         if not bot_token:
@@ -49,14 +51,24 @@ class VKBotManager:
 
         api_url = "http://0.0.0.0:8000/api"
         upload_dir = "uploads"
-        bot = Bot(token=bot_token)
+
+        # Создаем отдельный HTTP-клиент для бота
+        http_client = AiohttpClient()
+        bot = Bot(token=bot_token, api=API(token=bot_token, http_client=http_client))
 
         vk_handler = VKHandler(bot, bot_id, api_url, upload_dir)
-        self.bots[bot_id] = vk_handler
-        await vk_handler.start()  # Запускаем бота в отдельном потоке
+
+        # Запускаем бота
+        vk_handler.start()
+
+        self.bots[bot_id] = {
+            "handler": vk_handler,
+            "http_client": http_client
+        }
+
         await RedisRepository.mark_bot_as_running(bot_id)
         print(f"Бот {bot_id} запущен")
-
+        
     async def stop_bot(self, bot_id):
         if await RedisRepository.is_bot_running(bot_id):
             if bot_id in self.bots:

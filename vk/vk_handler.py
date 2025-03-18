@@ -11,6 +11,9 @@ from vkbottle.bot import BotLabeler, Message
 from vkbottle.dispatch.rules.base import CommandRule
 import threading
 from vkbottle.tools import LoopWrapper
+import asyncio
+import threading
+
 
 class VKHandler:
     def __init__(self, bot: Bot, bot_id: int, api_url: str, upload_dir: str):
@@ -135,12 +138,27 @@ class VKHandler:
             return None
         return response.get("category")
 
-    async def start(self):
+    def start(self):
         """Запуск бота в отдельном потоке"""
         self.logger.info(f"Запуск бота {self.bot_id}")
-        self.thread = threading.Thread(target=self.bot.run_forever, daemon=True)
-        self.thread.start()
+        
+        def run_bot():
+            # Создаем новый цикл событий для потока
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                # Запускаем бота в бесконечном цикле
+                self.bot.run_forever()
+            except Exception as e:
+                self.logger.error(f"Ошибка при запуске бота {self.bot_id}: {e}", exc_info=True)
+            finally:
+                # Закрываем цикл событий после завершения
+                loop.close()
 
+        # Запускаем поток с новым циклом событий
+        self.thread = threading.Thread(target=run_bot, daemon=True)
+        self.thread.start()
 
     def stop(self):
         """Остановка бота"""

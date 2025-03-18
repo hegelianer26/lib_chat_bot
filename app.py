@@ -17,6 +17,8 @@ from db.db_repositories import (
     BotStatisticsRepository,
     BotUserRepository,
 )
+from contextlib import asynccontextmanager
+
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -51,7 +53,8 @@ async def create_app():
         app.logger.info("Redis connection pool closed.")
 
     # Фабрика зависимостей
-    async def initialize_repositories():
+    @asynccontextmanager
+    async def get_repositories():
         async with get_db() as session:
             repositories = {
                 "user_repo": UserRepository(session),
@@ -62,12 +65,15 @@ async def create_app():
                 "bot_statistics_repo": BotStatisticsRepository(session),
                 "bot_user_repo": BotUserRepository(session),
             }
-            return repositories
+            try:
+                yield repositories
+            finally:
+                await session.close()
 
-    # Инициализация репозиториев перед запросом
     @app.before_request
     async def before_request():
-        current_app.repositories = await initialize_repositories()
+        async with get_repositories() as repositories:
+            current_app.repositories = repositories
 
     # Очистка ресурсов после запроса
     @app.after_request
