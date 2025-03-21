@@ -32,6 +32,7 @@ class MessageHandlers:
             await self.process_catalog_search(message)
             return
         
+        
         await self.vk_handler.update_last_interaction(user['id'])
         await self.vk_handler.save_statistics(self.vk_handler.bot_id, user['id'], 'message_received', message.text)
 

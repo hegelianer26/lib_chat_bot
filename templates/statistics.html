@@ -58,10 +58,6 @@
                 <div class="stat-number" id="totalFailedQueries">-</div>
                 <div class="stat-label">Всего невыполненных запросов</div>
             </div>
-            <div class="stat-card"> 
-                <div class="stat-number" id="avgSessionDuration">-</div>
-                <div class="stat-label">Средняя продолжительность сессии</div>
-            </div>
         </div>
     </div>
 
@@ -78,15 +74,6 @@
             <canvas id="hourlyChart"></canvas>
         </div>
     </div>
-
-    <div class="form-section">
-        <h2>Удержание пользователей</h2>
-        <div class="chart-wrapper">
-            <canvas id="retentionChart"></canvas>
-        </div>
-    </div>
-
-
 
     <div class="stats-grid">
         <div class="stat-card">
@@ -105,7 +92,7 @@
         let charts = {};
 
         async function loadStatistics() {
-            const [overview, daily, hourly, retention, categoryUsage, popularActions, failed, avgSessionDuration] = await Promise.all([
+            const [overview, daily, hourly, retention, categoryUsage, popularActions, failed] = await Promise.all([
                 fetch(`/bot/{{ bot.id }}/api/statistics/overview?days=${currentPeriod}`).then(r => r.json()),
                 fetch(`/bot/{{ bot.id }}/api/statistics/daily?days=${currentPeriod}`).then(r => r.json()),
                 fetch(`/bot/{{ bot.id }}/api/statistics/hourly-activity?days=${currentPeriod}`).then(r => r.json()),
@@ -113,7 +100,6 @@
                 fetch(`/bot/{{ bot.id }}/api/statistics/category-usage?days=${currentPeriod}`).then(r => r.json()),
                 fetch(`/bot/{{ bot.id }}/api/statistics/popular-actions?limit=10`).then(r => r.json()),
                 fetch(`/bot/{{ bot.id }}/api/statistics/failed-queries`).then(r => r.json()),
-                fetch(`/bot/{{ bot.id }}/api/statistics/average-session-duration?days=${currentPeriod}`).then(r => r.json())
             ]);
 
             // Update summary stats
@@ -123,17 +109,12 @@
                 daily.daily_activity.reduce((sum, day) => sum + day.count, 0) / daily.daily_activity.length
             );
             document.getElementById('totalFailedQueries').textContent = failed.queries.reduce((sum, q) => sum + q.count, 0);
-            document.getElementById('avgSessionDuration').textContent = formatDuration(avgSessionDuration.average_session_duration);
 
             // Update daily activity chart
             updateDailyChart(daily);
 
             // Update hourly activity chart
             updateHourlyChart(hourly);
-
-            // Update retention chart
-            updateRetentionChart(retention);
-
 
             // Update popular actions list
             updatePopularActionsList(popularActions);
@@ -230,39 +211,7 @@
                 }
             });
         }
-
-        function updateRetentionChart(data) {
-            if (charts.retention) charts.retention.destroy();
-            charts.retention = new Chart(document.getElementById('retentionChart'), {
-                type: 'line',
-                data: {
-                    labels: data.user_retention.map(d => new Date(d.date).toLocaleDateString('ru-RU')),
-                    datasets: [{
-                        label: 'Количество пользователей',
-                        data: data.user_retention.map(d => d.users_count),
-                        borderColor: '#4caf50',
-                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Количество пользователей'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-    
+   
 
         function updatePopularActionsList(data) {
             const list = document.getElementById('popularActionsList');

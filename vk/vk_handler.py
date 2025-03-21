@@ -163,7 +163,7 @@ class VKHandler:
     def stop(self):
         """Остановка бота"""
         self.logger.info(f"Остановка бота {self.bot_id}")
-        self.bot.loop_wrapper.stop()  # Останавливаем цикл
+        self.bot.loop_wrapper.close()  # Останавливаем цикл
         if self.thread:
             self.thread.join()  # Ждем завершения потока
 

@@ -30,7 +30,7 @@ async def get_statistics_overview(bot_id):
         return jsonify({'error': 'Bot not found or access denied'}), 403
     
     user_activity = await bot_statistics_repo.get_user_activity(bot_id, start_date, end_date)
-    action_types = await bot_statistics_repo.get_action_types(bot_id, start_date, end_date)
+    action_types = await bot_statistics_repo.get_message_text(bot_id, start_date, end_date)
     
     return jsonify({
         'user_activity': [

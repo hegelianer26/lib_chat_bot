@@ -69,3 +69,22 @@ class RedisRepository:
                 yield pubsub
             finally:
                 await pubsub.unsubscribe(channel)
+
+
+    @staticmethod
+    async def add_bot_task(bot_id, task_id):
+        """Добавить задачу для бота"""
+        async with RedisRepository.get_connection() as redis:
+            await redis.hset(f'bot_task:{bot_id}', mapping={"task_id": task_id})
+
+    @staticmethod
+    async def get_bot_task(bot_id):
+        """Получить задачу для бота"""
+        async with RedisRepository.get_connection() as redis:
+            return await redis.hgetall(f'bot_task:{bot_id}')
+
+    @staticmethod
+    async def remove_bot_task(bot_id):
+        """Удалить задачу для бота"""
+        async with RedisRepository.get_connection() as redis:
+            await redis.delete(f'bot_task:{bot_id}')
